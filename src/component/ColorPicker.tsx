@@ -22,7 +22,7 @@ function getKeyByValue(map: Map<string, string>, searchValue: string): string {
       return key;
     }
   }
-  return '';
+  return 'Blue';
 }
 
 const ColorPickerDialog: React.FC<{

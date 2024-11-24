@@ -2,8 +2,9 @@ import React from 'react';
 import './App.css';
 import TacticalBoard from './component/tacticalBoard/TacticalBoard';
 import { IPlayerData } from './component/player/interface';
-import { getFormationHorizontally } from './utils/FormationPos';
-import ColorPickerDialog from './component/ColorPicker';
+import { formationsKeys, getFormationHorizontally } from './utils/FormationPos';
+import FormationOptions from './component/FormationOptions';
+import Team from './component/Team';
 
 const initialPlayers: IPlayerData[] = [
   {
@@ -119,31 +120,25 @@ const initialPlayers: IPlayerData[] = [
 ];
 
 function App() {
-  const [isOpen, setIsOpen] = React.useState<boolean>(false);
-  const [shirtColor, setShirtColor] = React.useState<string>('Blue');
-  const [shortColor, setShortColor] = React.useState<string>('Blue');
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
 
-  const handleButtonClick = () => {
-    setIsOpen(true);
-  };
+  const [selectedFormation, setSelectedFormation] = React.useState<
+    { id: string; x: number; y: number }[]
+  >(getFormationHorizontally('3-4-3'));
 
-  const handleCloseDialog = (shirtC: string, pantsC: string) => {
-    shirtC && setShirtColor(shirtC);
-    pantsC && setShortColor(pantsC);
-    setIsOpen(false);
-
-    //move this logic inside the board
+  const handleFormationChange = (formation: string) => {
+    setSelectedFormation(getFormationHorizontally(formation));
   };
 
   const generateAvilablePlayers = React.useCallback(
     (players: IPlayerData[]) => {
-      const formation = getFormationHorizontally('4-4-2');
+      const formation = getFormationHorizontally('3-4-3');
       return players.map((player, index) => {
         return {
           ...player,
           axis: formation[index],
-          shirtColor,
-          shortColor,
+          shirtColor: 'Blue',
+          shortColor: 'Blue',
         };
       });
     },
@@ -151,18 +146,21 @@ function App() {
   );
 
   return (
-    <div>
+    <div
+      ref={containerRef}
+      style={{ width: '750px', height: '500px' }}
+      data-testid={`containerRef`}
+      id='containerRef'
+    >
       <div style={{ display: 'flex' }}>
-        <button onClick={handleButtonClick}>Open Color Picker</button>
-        {isOpen && (
-          <ColorPickerDialog
-            onClose={handleCloseDialog}
-            shirtC={shirtColor}
-            pantsC={shortColor}
-          />
-        )}
+        <FormationOptions
+          formations={Object.keys(formationsKeys)}
+          selectedFormation={'3-4-3'}
+          onFormationChange={handleFormationChange}
+        />
       </div>
-      <TacticalBoard players={generateAvilablePlayers(initialPlayers)} />
+      <Team players={generateAvilablePlayers(initialPlayers)} />
+      <TacticalBoard />
     </div>
   );
 }

@@ -10,10 +10,9 @@ const Player: React.FC<PlayerProps> = ({ player, onUpdatePlayer }) => {
   const dragging = React.useRef(false);
   const playerRef = React.useRef<HTMLDivElement | null>(null);
   const [dragStart, setDragStart] = useState({
-    x: player.axis?.x ?? 0,
-    y: player.axis?.y ?? 0,
+    x: 0,
+    y: 0,
   });
-  console.log(player);
 
   const handleNameClick = () => {
     setIsNameEditing(true);
@@ -41,48 +40,65 @@ const Player: React.FC<PlayerProps> = ({ player, onUpdatePlayer }) => {
     setIsNumberEditing(false);
   };
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    dragging.current = true;
-    setDragStart({ x: e.clientX, y: e.clientY });
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
+  const updatePosition = (
+    e: MouseEvent | React.TouchEvent<HTMLDivElement>,
+    isMouse: boolean
+  ) => {
     if (!dragging.current || !playerRef.current) return;
 
     const parentRect = document
       .querySelector(`[data-testid^="WrapperPlayers"]`)
       ?.getBoundingClientRect();
     if (!parentRect) return;
+
+    const clientX = isMouse
+      ? (e as MouseEvent).clientX
+      : (e as React.TouchEvent).touches[0].clientX;
+    const clientY = isMouse
+      ? (e as MouseEvent).clientY
+      : (e as React.TouchEvent).touches[0].clientY;
+
+    // Mouse is within the parent bounds
+    const isMouseInsideParent =
+      clientX >= parentRect.left &&
+      clientX <= parentRect.right &&
+      clientY >= parentRect.top &&
+      clientY <= parentRect.bottom;
+
+    // Mouse is outside the parent container, prevent dragging
+    if (!isMouseInsideParent) isMouse ? handleMouseUp() : handleTouchEnd();
+
     const playerRect = playerRef.current.getBoundingClientRect();
+    const playerWidth = playerRect.width;
+    const playerHeight = playerRect.height;
 
-    let newX = e.clientX - dragStart.x - playerRect.width / 2;
-    let newY = e.clientY - dragStart.y - playerRect.height / 2;
-    const axisXCondition =
-      e.clientX > parentRect.left && e.clientX < parentRect.right;
-    const axisYCondition =
-      e.clientY > parentRect.top && e.clientY < parentRect.bottom;
-    const withinParentRect =
-      e.clientX > parentRect.left &&
-      e.clientX < parentRect.right &&
-      e.clientY > parentRect.top &&
-      e.clientY < parentRect.bottom;
+    let newX = clientX - dragStart.x - playerWidth / 2;
+    let newY = clientY - dragStart.y - playerHeight / 2;
 
-    // If mouse is outside the parent rectangle, prevent dragging
-    if (!withinParentRect) return;
-
-    if (!axisXCondition && !axisYCondition) {
-      playerRef.current.style.left = `${newX}px`;
-      playerRef.current.style.top = `${newY}px`;
-    } else {
-      if (axisXCondition && e.clientX < 735 && e.clientX > 34) {
-        playerRef.current.style.left = `${newX}px`;
-      }
-      if (axisYCondition && e.clientY < 502 && e.clientY > 80) {
-        playerRef.current.style.top = `${newY}px`;
-      }
-    }
+    newX = Math.max(
+      parentRect.left,
+      Math.min(parentRect.right - playerWidth, newX)
+    );
+    newY = Math.max(
+      parentRect.top,
+      Math.min(parentRect.bottom - playerHeight, newY)
+    );
 
     onUpdatePlayer({ axis: { x: newX, y: newY } });
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    dragging.current = true;
+    if (playerRef.current) {
+      setDragStart({
+        x: e.clientX,
+        y: e.clientY,
+      });
+    }
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    updatePosition(e, true);
   };
 
   const handleMouseUp = () => {
@@ -100,33 +116,8 @@ const Player: React.FC<PlayerProps> = ({ player, onUpdatePlayer }) => {
   };
 
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!dragging.current || !playerRef.current) return;
     e.preventDefault();
-    const parentRect = document
-      .querySelector(`[data-testid^="WrapperPlayers"]`)
-      ?.getBoundingClientRect();
-    if (!parentRect) return;
-
-    const touch = e.touches[0];
-    const playerRect = playerRef.current.getBoundingClientRect();
-    const newX = touch.clientX - dragStart.x - playerRect.width / 2;
-    const newY = touch.clientY - dragStart.y - playerRect.height / 2;
-    const axisXCondition =
-      playerRect.x >= parentRect.left && playerRect.right <= parentRect.right;
-    const axisYCondition =
-      playerRect.y >= parentRect.top && playerRect.bottom <= parentRect.bottom;
-
-    if (axisXCondition && axisYCondition) {
-      playerRef.current.style.left = `${newX}px`;
-      playerRef.current.style.top = `${newY}px`;
-    } else {
-      if (!axisXCondition && touch.clientX < 700 && touch.clientX > 34) {
-        playerRef.current.style.left = `${newX}px`;
-      }
-      if (!axisYCondition && touch.clientY < 446 && touch.clientY > 146) {
-        playerRef.current.style.top = `${newY}px`;
-      }
-    }
+    updatePosition(e, false);
   };
 
   const handleTouchEnd = () => {
@@ -144,13 +135,7 @@ const Player: React.FC<PlayerProps> = ({ player, onUpdatePlayer }) => {
     };
   }, [dragging]);
 
-  React.useEffect(() => {
-    if (playerRef.current && player.prevUndo) {
-      playerRef.current.style.top = `${player.axis?.y}px`;
-      playerRef.current.style.left = `${player.axis?.x}px`;
-      setDragStart({ x: player.axis?.x ?? 0, y: player.axis?.y ?? 0 });
-    }
-  }, [player]);
+  // console.log(player.shirtColor);
 
   return (
     <div
@@ -162,6 +147,8 @@ const Player: React.FC<PlayerProps> = ({ player, onUpdatePlayer }) => {
         flexDirection: 'column',
         alignItems: 'center',
         position: 'absolute',
+        left: player.axis!.x,
+        top: player.axis!.y,
         cursor: dragging.current ? 'grab' : 'move',
       }}
       className={'player'}

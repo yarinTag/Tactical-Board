@@ -1,27 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as htmlToImage from 'html-to-image';
-import { IPlayerData } from '../player/interface';
 import { Point, SelectOptions } from './interface';
 import { drawPitch } from '../../utils/CanvasUtils';
-import { createPlayer } from '../player';
-import {
-  formationsKeys,
-  getFormationHorizontally,
-} from '../../utils/FormationPos';
-import FormationOptions from '../FormationOptions';
 import BoardOptions from './BoardOptions';
 import ActionButtons from '../actionbtn/ActionButtons';
 
-interface TacticsBoardProps {
-  players: IPlayerData[];
-}
+interface TacticsBoardProps {}
 
-const TacticalBoard: React.FC<TacticsBoardProps> = (
-  props: TacticsBoardProps
-) => {
+const TacticalBoard: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const imageRef = useRef(new Image());
   const [ballPosition, setBallPosition] = useState({ x: 362, y: 240 });
   const [isMouseDown, setIsMouseDown] = useState<boolean>(false);
@@ -35,15 +23,10 @@ const TacticalBoard: React.FC<TacticsBoardProps> = (
   >([]);
   const [undoSteps, setUndoSteps] = useState<{ [key: number]: Point[] }>({});
   const [redoStep, setRedoStep] = useState<{ [key: number]: Point[] }>({});
-  const [selectedFormation, setSelectedFormation] = React.useState<
-    { id: string; x: number; y: number }[]
-  >(getFormationHorizontally('4-4-2'));
+
   const [selectOption, setSelectOption] = React.useState(
     SelectOptions.DRAWLINE
   );
-  const handleFormationChange = (formation: string) => {
-    setSelectedFormation(getFormationHorizontally(formation));
-  };
 
   const handleSelectedOption = (value: SelectOptions) => {
     setSelectOption(value);
@@ -70,6 +53,7 @@ const TacticalBoard: React.FC<TacticsBoardProps> = (
         break;
     }
   };
+
   const [undo, setUndo] = useState<number>(0);
   const [redo, setRedo] = useState<number>(0);
 
@@ -89,24 +73,6 @@ const TacticalBoard: React.FC<TacticsBoardProps> = (
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Iterate over your player data and create player elements
-    if (wrapperRef.current) {
-      wrapperRef.current.innerHTML = '';
-    }
-    props.players.forEach((player, index) => {
-      const playerElement = createPlayer(player);
-
-      playerElement.style.position = 'absolute';
-      playerElement.style.left = `${player.axis?.x}px`;
-      playerElement.style.top = `${player.axis?.y}px`;
-
-      // Append the player element to the player container
-      wrapperRef.current?.appendChild(playerElement);
-    });
-
-    // Append the player container to the root of your component
-    // containerRef.current?.appendChild(playerContainer);
-    // };
     drawPitch(ctx, canvas.width, canvas.height);
   };
 
@@ -448,6 +414,7 @@ const TacticalBoard: React.FC<TacticsBoardProps> = (
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
+
     if (!ctx) return;
 
     handleReset();
@@ -464,19 +431,10 @@ const TacticalBoard: React.FC<TacticsBoardProps> = (
   ];
 
   return (
-    <div
-      ref={containerRef}
-      style={{ width: '750px', height: '500px' }}
-      data-testid={`containerRef`}
-      id='containerRef'
-    >
+    <div>
       <div style={{ display: 'flex' }}>
         <ActionButtons buttons={actionBtns} />
-        <FormationOptions
-          formations={Object.keys(formationsKeys)}
-          selectedFormation={'3-4-3'}
-          onFormationChange={handleFormationChange}
-        />
+
         <BoardOptions
           selectOption={SelectOptions.DRAWLINE}
           handleSelectedOption={handleSelectedOption}
@@ -497,7 +455,6 @@ const TacticalBoard: React.FC<TacticsBoardProps> = (
         data-testid={`WrapperPlayers`}
         // onMouseOut={handleMouseUp}
       />
-      <div ref={wrapperRef} style={{ border: '1px solid red' }} />
     </div>
   );
 };
