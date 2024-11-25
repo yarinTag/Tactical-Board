@@ -2,8 +2,7 @@ import React from 'react';
 import './App.css';
 import TacticalBoard from './component/tacticalBoard/TacticalBoard';
 import { IPlayerData } from './component/player/interface';
-import { formationsKeys, getFormationHorizontally } from './utils/FormationPos';
-import FormationOptions from './component/FormationOptions';
+import { getFormationHorizontally } from './utils/FormationPos';
 import Team from './component/Team';
 
 const initialPlayers: IPlayerData[] = [
@@ -122,17 +121,9 @@ const initialPlayers: IPlayerData[] = [
 function App() {
   const containerRef = React.useRef<HTMLDivElement | null>(null);
 
-  const [selectedFormation, setSelectedFormation] = React.useState<
-    { id: string; x: number; y: number }[]
-  >(getFormationHorizontally('3-4-3'));
-
-  const handleFormationChange = (formation: string) => {
-    setSelectedFormation(getFormationHorizontally(formation));
-  };
-
   const generateAvilablePlayers = React.useCallback(
     (players: IPlayerData[]) => {
-      const formation = getFormationHorizontally('3-4-3');
+      const formation = getFormationHorizontally('4-2-4');
       return players.map((player, index) => {
         return {
           ...player,
@@ -152,13 +143,6 @@ function App() {
       data-testid={`containerRef`}
       id='containerRef'
     >
-      <div style={{ display: 'flex' }}>
-        <FormationOptions
-          formations={Object.keys(formationsKeys)}
-          selectedFormation={'3-4-3'}
-          onFormationChange={handleFormationChange}
-        />
-      </div>
       <Team players={generateAvilablePlayers(initialPlayers)} />
       <TacticalBoard />
     </div>

@@ -2,6 +2,11 @@ import React from 'react';
 import { IPlayerData, IPlayerUpdate } from './player/interface';
 import ColorPickerDialog from './ColorPicker';
 import { PlayerContent } from './player/PlayerContent';
+import {
+  formationsKeys,
+  getFormationHorizontally,
+} from '../utils/FormationPos';
+import FormationOptions from './FormationOptions';
 
 interface ITeamProps {
   players: IPlayerData[];
@@ -10,6 +15,17 @@ interface ITeamProps {
 const Team: React.FC<ITeamProps> = (props) => {
   const [players, setPlayers] = React.useState(props.players);
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
+
+  const handleFormationChange = (formation: string) => {
+    const newFormation = getFormationHorizontally(formation);
+
+    setPlayers((prevPlayers) =>
+      prevPlayers.map((player, index) => ({
+        ...player,
+        axis: newFormation[index],
+      }))
+    );
+  };
 
   const handleButtonClick = () => {
     setIsOpen(true);
@@ -27,7 +43,6 @@ const Team: React.FC<ITeamProps> = (props) => {
   };
 
   const handlePlayerUpdate = (updatedPlayer: IPlayerUpdate) => {
-    // console.log('Player updated:', updatedPlayer);
     setPlayers((prevPlayers) =>
       prevPlayers.map((player) =>
         player.name === updatedPlayer.name
@@ -44,6 +59,11 @@ const Team: React.FC<ITeamProps> = (props) => {
 
   return (
     <div style={{ display: 'flex' }}>
+      <FormationOptions
+        formations={formationsKeys}
+        selectedFormation={'4-2-4'}
+        onFormationChange={handleFormationChange}
+      />
       <button onClick={handleButtonClick}>Open Color Picker</button>
       {isOpen && (
         <ColorPickerDialog
