@@ -28,5 +28,5 @@ export interface IPlayerUpdate {
 
 export interface PlayerProps {
   player: IPlayerData;
-  onUpdatePlayer: (updatedPlayer: IPlayerUpdate) => void;
+  onUpdatePlayer: (updatedPlayer: IPlayerUpdate,type?:string) => void;
 }

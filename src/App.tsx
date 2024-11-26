@@ -4,6 +4,8 @@ import TacticalBoard from './component/tacticalBoard/TacticalBoard';
 import { IPlayerData } from './component/player/interface';
 import { getFormationHorizontally } from './utils/FormationPos';
 import Team from './component/Team';
+import { useDispatch } from 'react-redux';
+import { setPlayers } from './redux/playerSlice';
 
 const initialPlayers: IPlayerData[] = [
   {
@@ -120,21 +122,27 @@ const initialPlayers: IPlayerData[] = [
 
 function App() {
   const containerRef = React.useRef<HTMLDivElement | null>(null);
+  const dispatch = useDispatch();
 
-  const generateAvilablePlayers = React.useCallback(
-    (players: IPlayerData[]) => {
-      const formation = getFormationHorizontally('4-2-4');
-      return players.map((player, index) => {
-        return {
-          ...player,
-          axis: formation[index],
-          shirtColor: 'Blue',
-          shortColor: 'Blue',
-        };
-      });
-    },
-    []
-  );
+  const generateAvilablePlayers = (players: IPlayerData[]) => {
+    const formation = getFormationHorizontally('4-2-4');
+    dispatch(
+      setPlayers(
+        players.map((player, index) => {
+          return {
+            ...player,
+            axis: formation[index],
+            shirtColor: 'Blue',
+            shortColor: 'Blue',
+          };
+        })
+      )
+    );
+  };
+
+  React.useEffect(() => {
+    generateAvilablePlayers(initialPlayers);
+  }, []);
 
   return (
     <div
@@ -143,7 +151,7 @@ function App() {
       data-testid={`containerRef`}
       id='containerRef'
     >
-      <Team players={generateAvilablePlayers(initialPlayers)} />
+      <Team />
       <TacticalBoard />
     </div>
   );

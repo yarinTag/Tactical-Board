@@ -1,5 +1,5 @@
 import React from 'react';
-import { IPlayerData, IPlayerUpdate } from './player/interface';
+import { IPlayerUpdate } from './player/interface';
 import ColorPickerDialog from './ColorPicker';
 import { PlayerContent } from './player/PlayerContent';
 import {
@@ -7,23 +7,25 @@ import {
   getFormationHorizontally,
 } from '../utils/FormationPos';
 import FormationOptions from './FormationOptions';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../redux/store';
+import { setPlayers } from '../redux/playerSlice';
 
-interface ITeamProps {
-  players: IPlayerData[];
-}
-
-const Team: React.FC<ITeamProps> = (props) => {
-  const [players, setPlayers] = React.useState(props.players);
+const Team: React.FC = () => {
+  const dispatch = useDispatch();
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
+  const players = useSelector((state: RootState) => state.players.players);
 
   const handleFormationChange = (formation: string) => {
     const newFormation = getFormationHorizontally(formation);
 
-    setPlayers((prevPlayers) =>
-      prevPlayers.map((player, index) => ({
-        ...player,
-        axis: newFormation[index],
-      }))
+    dispatch(
+      setPlayers(
+        players.map((player, index) => ({
+          ...player,
+          axis: newFormation[index],
+        }))
+      )
     );
   };
 
@@ -37,24 +39,30 @@ const Team: React.FC<ITeamProps> = (props) => {
   };
 
   const updateAllShirtColors = (shirtColor: string, shortColor: string) => {
-    setPlayers((prevPlayers) =>
-      prevPlayers.map((player) => ({ ...player, shirtColor, shortColor }))
+    dispatch(
+      setPlayers(
+        players.map((player, index) => ({
+          ...player,
+          shirtColor,
+          shortColor,
+        }))
+      )
     );
   };
 
   const handlePlayerUpdate = (updatedPlayer: IPlayerUpdate) => {
-    setPlayers((prevPlayers) =>
-      prevPlayers.map((player) =>
-        player.name === updatedPlayer.name
-          ? {
-              ...player,
-              ...updatedPlayer,
-              shirtColor: player.shirtColor,
-              shortColor: player.shortColor,
-            }
-          : player
-      )
-    );
+    // setPlayers((prevPlayers) =>
+    //   prevPlayers.map((player) =>
+    //     player.name === updatedPlayer.name
+    //       ? {
+    //           ...player,
+    //           ...updatedPlayer,
+    //           shirtColor: player.shirtColor,
+    //           shortColor: player.shortColor,
+    //         }
+    //       : player
+    //   )
+    // );
   };
 
   return (
