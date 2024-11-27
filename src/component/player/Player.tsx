@@ -21,6 +21,7 @@ const Player: React.FC<PlayerProps> = ({ player, onUpdatePlayer }) => {
     const parentRect = document
       .querySelector(`[data-testid^="WrapperPlayers"]`)
       ?.getBoundingClientRect();
+
     if (!parentRect) return;
 
     const clientX = isMouse
@@ -64,7 +65,6 @@ const Player: React.FC<PlayerProps> = ({ player, onUpdatePlayer }) => {
       playerRef.current.style.left = `${newX}px`;
       playerRef.current.style.top = `${newY}px`;
     }
-    // setLocalAxis({ x: newX, y: newY });
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -89,23 +89,27 @@ const Player: React.FC<PlayerProps> = ({ player, onUpdatePlayer }) => {
   };
 
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    // Prevent default behavior to avoid scrolling or zooming
-    e.preventDefault();
+    if (!playerRef.current) return;
 
     const touch = e.touches[0];
+    const playerRect = playerRef.current.getBoundingClientRect();
+    setDragStart({
+      x: touch.clientX - (playerRect.left + playerRect.width / 2),
+      y: touch.clientY - (playerRect.top + playerRect.height / 2),
+    });
     dragging.current = true;
-    setDragStart({ x: touch.clientX, y: touch.clientY });
-    playerRef.current?.style?.setProperty('touch-action', 'none');
+    playerRef.current.style.touchAction = 'none';
   };
 
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    e.preventDefault();
     updatePosition(e, false);
   };
 
   const handleTouchEnd = () => {
+    if (!playerRef.current) return;
+
     dragging.current = false;
-    playerRef.current?.style?.setProperty('touch-action', 'auto');
+    playerRef.current.style.touchAction = 'auto';
     onUpdatePlayer({ ...player, axis: playerPosition.current }, 'position');
   };
 
@@ -132,12 +136,10 @@ const Player: React.FC<PlayerProps> = ({ player, onUpdatePlayer }) => {
       style={{
         display: 'flex',
         width: '70px',
-        height: '70px',
+        height: '80px',
         flexDirection: 'column',
         alignItems: 'center',
         position: 'absolute',
-        // left: localAxis!.x,
-        // top: localAxis!.y,
         cursor: dragging.current ? 'grab' : 'move',
       }}
       className={'player'}
@@ -147,11 +149,7 @@ const Player: React.FC<PlayerProps> = ({ player, onUpdatePlayer }) => {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <div
-        style={{
-          position: 'relative',
-        }}
-      >
+      <div>
         <Uniform player={player} onUpdatePlayer={onUpdatePlayer} />
       </div>
     </div>

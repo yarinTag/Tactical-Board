@@ -34,7 +34,12 @@ const Uniform: React.FC<PlayerProps> = ({ player, onUpdatePlayer }) => {
   };
 
   return (
-    <>
+    <div
+      style={{
+        position: 'relative',
+        textAlign: 'center',
+      }}
+    >
       <Kit
         shirtFill={player.shirtColor}
         shirtStroke='#ffffff'
@@ -50,15 +55,23 @@ const Uniform: React.FC<PlayerProps> = ({ player, onUpdatePlayer }) => {
           defaultValue={player.name}
           onChange={handleNameChange}
           onBlur={handleNameBlur}
+          maxLength={20}
           style={{
             position: 'absolute',
-            top: '0%',
+            top: '10%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            color: 'black',
-            fontWeight: 'bold',
-            fontSize: '1.8vw',
+            width: '70%',
+            fontSize: '12px',
+            padding: '4px',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
             textAlign: 'center',
+            lineHeight: '1.2em',
+            maxHeight: '2.4em',
+            overflow: 'hidden',
+            whiteSpace: 'normal',
+            textOverflow: 'ellipsis',
           }}
         />
       ) : (
@@ -66,14 +79,19 @@ const Uniform: React.FC<PlayerProps> = ({ player, onUpdatePlayer }) => {
           onClick={handleNameClick}
           style={{
             position: 'absolute',
-            top: '24%',
+            top: '22%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
             color: '#ffffff',
-            fontWeight: 'bold',
             fontSize: '6px',
             textAlign: 'center',
+            fontWeight: 'bold',
             cursor: 'pointer',
+            lineHeight: '1.2em',
+            maxHeight: '2.4em',
+            overflow: 'hidden',
+            whiteSpace: 'normal',
+            textOverflow: 'ellipsis',
           }}
         >
           {player.name}
@@ -89,12 +107,13 @@ const Uniform: React.FC<PlayerProps> = ({ player, onUpdatePlayer }) => {
           onBlur={handleNumberBlur}
           style={{
             position: 'absolute',
-            bottom: '50%',
+            bottom: '15%',
             left: '50%',
-            transform: 'translateX(-50%)',
-            color: 'black',
-            fontWeight: 'bold',
-            fontSize: '1vw',
+            transform: 'translate(-50%, 50%)',
+            width: '30px',
+            fontSize: '12px',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
             textAlign: 'center',
           }}
         />
@@ -103,9 +122,9 @@ const Uniform: React.FC<PlayerProps> = ({ player, onUpdatePlayer }) => {
           onClick={handleNumberClick}
           style={{
             position: 'absolute',
-            bottom: '50%',
-            left: +player.shirtNumber > 9 ? '45%' : '48%',
-            transform: 'translateX(-50%, 50%)',
+            bottom: '45%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
             color: 'white',
             fontWeight: 'bold',
             fontSize: '10px',
@@ -116,7 +135,7 @@ const Uniform: React.FC<PlayerProps> = ({ player, onUpdatePlayer }) => {
           {player.shirtNumber}
         </div>
       )}
-    </>
+    </div>
   );
 };
 

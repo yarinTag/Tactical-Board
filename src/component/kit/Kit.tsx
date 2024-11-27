@@ -1,6 +1,3 @@
-import React from 'react';
-// import "../styles/Kit.css";
-
 const shortsPath = [
   'M 31,48 L 68,48 L 74,88.5 L 53,88.5',
   'L 50,75 L 47,88.5 L 25.5,88.5 L 31,48 z',
@@ -12,7 +9,16 @@ const shirtPath = [
   'L 38.5,5.5 L 57,24 L 44,37 L 38.5,31.5 L 38.5,58.5 L -0.5,58.5',
 ].join(' ');
 
-function Kit(props: any) {
+interface IKitProps {
+  shirtFill: string;
+  shirtStroke: string;
+  shortsFill: string;
+  shortsStroke: string;
+  stripes: boolean;
+  stripeColor: string;
+}
+
+function Kit(props: IKitProps) {
   return (
     <svg
       className='Kit'

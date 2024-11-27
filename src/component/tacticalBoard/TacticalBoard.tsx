@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as htmlToImage from 'html-to-image';
-import { Point, SelectOptions } from './interface';
+import { IAxisPoint, Point, SelectOptions, UndoSteps } from './interface';
 import { drawPitch } from '../../utils/CanvasUtils';
 import BoardOptions from './BoardOptions';
 import ActionButtons from '../actionbtn/ActionButtons';
@@ -14,15 +14,13 @@ const TacticalBoard: React.FC = () => {
   const [ballPosition, setBallPosition] = useState({ x: 362, y: 240 });
   const [isMouseDown, setIsMouseDown] = useState<boolean>(false);
   const [isBallDrag, setIsBallDrag] = useState<boolean>(false);
-  const startX = React.useRef<number>(0);
-  const startY = React.useRef<number>(0);
+  const startX = React.useRef<number | null>(null);
+  const startY = React.useRef<number | null>(null);
   const canvas = canvasRef.current;
   const ctx = canvas?.getContext('2d');
-  const [storedLines, setStoredLines] = useState<
-    Array<{ x: number; y: number }>
-  >([]);
-  const [undoSteps, setUndoSteps] = useState<{ [key: number]: Point[] }>({});
-  const [redoStep, setRedoStep] = useState<{ [key: number]: Point[] }>({});
+  const [storedLines, setStoredLines] = useState<Array<IAxisPoint>>([]);
+  const [undoSteps, setUndoSteps] = useState<UndoSteps>({});
+  const [redoStep, setRedoStep] = useState<UndoSteps>({});
 
   const [selectOption, setSelectOption] = React.useState(
     SelectOptions.DRAWLINE
@@ -167,11 +165,13 @@ const TacticalBoard: React.FC = () => {
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     setIsMouseDown(true);
+    const x = e.nativeEvent.offsetX;
+    const y = e.nativeEvent.offsetY;
     if (canvas && ctx) {
       switch (selectOption) {
         case SelectOptions.BALLPASS:
-          const canvasMouseX = e.clientX - canvas.offsetLeft;
-          const canvasMouseY = e.clientY - canvas.offsetTop;
+          const canvasMouseX = x;
+          const canvasMouseY = y;
           setStoredLines((prev) => [
             ...prev,
             {
@@ -191,13 +191,10 @@ const TacticalBoard: React.FC = () => {
           break;
         case SelectOptions.DRAWLINE:
           ctx.beginPath();
-          ctx.moveTo(
-            (startX.current = e.pageX - canvas.offsetLeft),
-            (startY.current = e.pageY - canvas.offsetTop)
-          );
+          ctx.moveTo((startX.current = x), (startY.current = y));
           const temp = {
             ...undoSteps,
-            [undo + 1]: [],
+            [undo + 1]: [] as Point[],
           };
           const { offsetX, offsetY } = e.nativeEvent;
 
@@ -213,7 +210,7 @@ const TacticalBoard: React.FC = () => {
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (isMouseDown) {
-      if (canvas && ctx) {
+      if (canvas && ctx && startX.current !== null && startY.current !== null) {
         const x = e.pageX - canvas.getBoundingClientRect().left;
         const y = e.pageY - canvas.getBoundingClientRect().top;
         switch (selectOption) {
@@ -277,7 +274,7 @@ const TacticalBoard: React.FC = () => {
   const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     if (isMouseDown) {
-      if (canvas && ctx) {
+      if (canvas && ctx && startX.current !== null && startY.current !== null) {
         const touch = e.touches[0];
         const x = touch.pageX - canvas.offsetLeft;
         const y = touch.pageY - canvas.offsetTop;
