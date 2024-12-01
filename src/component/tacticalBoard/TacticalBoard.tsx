@@ -23,6 +23,7 @@ const TacticalBoard: React.FC = () => {
   const [redoStep, setRedoStep] = useState<UndoSteps>({});
   const [eraserSize, setEraserSize] = useState<number>(3);
   const [lines, setLines] = useState<UndoSteps>({});
+  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
 
   const [selectOption, setSelectOption] = React.useState(
     SelectOptions.DRAWLINE
@@ -280,6 +281,8 @@ const TacticalBoard: React.FC = () => {
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    setCursorPosition({ x: e.clientX, y: e.clientY });
+
     if (isMouseDown) {
       if (canvas && ctx && startX.current !== null && startY.current !== null) {
         const x = e.pageX - canvas.getBoundingClientRect().left;
@@ -537,10 +540,26 @@ const TacticalBoard: React.FC = () => {
         // onMouseOut={handleMouseUp}
         style={{
           border: '1px solid black',
-          cursor:
-            selectOption === SelectOptions.ERASER ? 'crosshair' : 'default',
+          cursor: selectOption === SelectOptions.ERASER ? 'none' : 'default',
         }}
       />
+      {/* Custom Cursor */}
+      {selectOption === SelectOptions.ERASER && (
+        <div
+          style={{
+            position: 'absolute',
+            top: `${cursorPosition.y}px`,
+            left: `${cursorPosition.x}px`,
+            width: '16px',
+            height: '16px',
+            background: `url('https://cdn-icons-png.flaticon.com/128/2015/2015051.png')`,
+            backgroundSize: 'cover',
+            pointerEvents: 'none',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 5,
+          }}
+        />
+      )}
     </div>
   );
 };
