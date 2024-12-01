@@ -19,6 +19,10 @@ const BoardOptions = (props: BoardOptionsProps) => {
         setSelectOption(value);
         props.handleSelectedOption(value);
         break;
+      case SelectOptions.ERASER:
+        setSelectOption(value);
+        props.handleSelectedOption(value);
+        break;
       default:
         setSelectOption(SelectOptions.DRAWLINE);
         props.handleSelectedOption(SelectOptions.DRAWLINE);

@@ -3,6 +3,7 @@ import { IPlayerData } from '../player/interface';
 export enum SelectOptions {
   DRAWLINE = 'draw-line',
   BALLPASS = 'ball-pass',
+  ERASER = 'eraser',
 }
 
 export const selectOptions = [
@@ -11,6 +12,8 @@ export const selectOptions = [
     value: SelectOptions.DRAWLINE,
   },
   { key: 'BALLPASS', value: SelectOptions.BALLPASS },
+
+  { key: 'ERASER', value: SelectOptions.ERASER },
 ];
 
 export interface ITacticalBoardProps {

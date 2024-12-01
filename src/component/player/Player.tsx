@@ -124,11 +124,12 @@ const Player: React.FC<PlayerProps> = ({ player, onUpdatePlayer }) => {
   }, [dragging]);
 
   React.useEffect(() => {
+    playerPosition.current = player.axis!;
     if (playerRef.current) {
       playerRef.current.style.left = `${player.axis!.x}px`;
       playerRef.current.style.top = `${player.axis!.y}px`;
     }
-  }, [player.axis]);
+  }, [player]);
 
   return (
     <div
@@ -141,6 +142,7 @@ const Player: React.FC<PlayerProps> = ({ player, onUpdatePlayer }) => {
         alignItems: 'center',
         position: 'absolute',
         cursor: dragging.current ? 'grab' : 'move',
+        zIndex: 3,
       }}
       className={'player'}
       data-testid={`player_by_${player.name}`}

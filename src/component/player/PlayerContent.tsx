@@ -1,13 +1,13 @@
 import React from 'react';
+import { useDispatch } from 'react-redux';
 
 import Player from './Player';
-import { IPlayerData, PlayerProps } from './interface';
-import { useDispatch } from 'react-redux';
 import {
   updatePlayerName,
   updatePlayerNumber,
   updatePlayerPosition,
 } from '../../redux/playerSlice';
+import { IPlayerData, PlayerProps } from './interface';
 
 export const PlayerContent: React.FC<PlayerProps> = ({
   player,
