@@ -1,5 +1,5 @@
 import React from 'react';
-// import '../styles/modal.css';
+import '../styles/modal.css';
 
 const colorsMap: Map<string, string> = new Map([
   ['Black', 'rgb(0, 0, 0)'],
@@ -60,6 +60,7 @@ const ColorPickerDialog: React.FC<{
           <select
             value={colorsMap.get(shirtColor)}
             onChange={handleShirtColorChange}
+            className='select'
           >
             {Array.from(colorsMap.entries()).map(([colorName, colorValue]) => (
               <option key={colorName} value={colorValue}>
@@ -71,6 +72,7 @@ const ColorPickerDialog: React.FC<{
           <select
             value={colorsMap.get(pantsColor)}
             onChange={handlePantsColorChange}
+            className='select'
           >
             {Array.from(colorsMap.entries()).map(([colorName, colorValue]) => (
               <option key={colorName} value={colorValue}>
@@ -79,7 +81,12 @@ const ColorPickerDialog: React.FC<{
             ))}
           </select>
           <br />
-          <button onClick={handleApplyColors}>Apply Colors</button>
+          <button
+            style={{ width: '100%', padding: '10px 20px', fontSize: '16px' }}
+            onClick={handleApplyColors}
+          >
+            Apply Colors
+          </button>
         </div>
       </div>
     </div>

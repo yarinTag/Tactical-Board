@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as htmlToImage from 'html-to-image';
-import { IAxisPoint, Point, SelectOptions, UndoSteps } from './interface';
-import { drawPitch } from '../../utils/CanvasUtils';
+
 import BoardOptions from './BoardOptions';
+import { drawPitch } from '../../utils/CanvasUtils';
 import ActionButtons from '../actionbtn/ActionButtons';
+import { IAxisPoint, Point, SelectOptions, UndoSteps } from './interface';
 
 interface TacticsBoardProps {}
 
@@ -33,11 +34,7 @@ const TacticalBoard: React.FC = () => {
     setSelectOption(value);
     switch (value) {
       case SelectOptions.BALLPASS:
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
+        if (!ctx || !canvas) return;
         // Load the image
         imageRef.current.src =
           'https://cdn.pixabay.com/photo/2013/07/13/10/51/football-157930_1280.png';
@@ -68,27 +65,7 @@ const TacticalBoard: React.FC = () => {
   const [undo, setUndo] = useState<number>(0);
   const [redo, setRedo] = useState<number>(0);
 
-  const drawLines = () => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (ctx && canvas) {
-      ctx?.clearRect(0, 0, canvas?.width, canvas?.height);
-      drawPitch(ctx, canvas?.width, canvas?.height);
-
-      Object.values(lines).forEach((line) => {
-        ctx.beginPath();
-        ctx.moveTo(line[0].offsetX, line[0].offsetY);
-        line.forEach((point) => {
-          ctx.lineTo(point.offsetX, point.offsetY);
-        });
-        ctx.stroke();
-      });
-    }
-  };
-
   const clearCanvas = () => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
     if (ctx && canvas) {
       ctx?.clearRect(0, 0, canvas?.width, canvas?.height);
       drawPitch(ctx, canvas?.width, canvas?.height);
@@ -97,11 +74,7 @@ const TacticalBoard: React.FC = () => {
   };
 
   const handleReset = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx || !canvas) return;
 
     drawPitch(ctx, canvas.width, canvas.height);
     setStoredBallPoint([]);
@@ -114,13 +87,7 @@ const TacticalBoard: React.FC = () => {
   };
 
   const drawLinesForBall = () => {
-    if (!canvasRef.current) return;
-
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx) return;
-
+    if (!canvasRef.current || !ctx) return;
     clearCanvas();
 
     ctx.beginPath();
@@ -136,12 +103,8 @@ const TacticalBoard: React.FC = () => {
   };
 
   const animateLine = () => {
-    if (!canvasRef.current || !storedBallPoint[0] || !imageRef.current) return;
-
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx) return;
+    if (!canvasRef.current || !storedBallPoint[0] || !imageRef.current || !ctx)
+      return;
 
     let currentIndex = 0;
     const animationSpeed = 2;
@@ -226,13 +189,27 @@ const TacticalBoard: React.FC = () => {
 
   const eraseAtPosition = (x: number, y: number, size: number) => {
     if (!ctx) return;
-
+    let index: number = -1;
     const newStoredLines = Object.entries(lines).filter(([key, points]) => {
-      return !isLineIntersectingWithEraser(points, x, y, size);
+      const isIntersecting = isLineIntersectingWithEraser(points, x, y, size);
+      if (isIntersecting) index = +key;
+      return !isIntersecting;
     });
 
+    if (index === -1) return;
+    // const updatedUndoSteps = { ...undoSteps, [index]: [] };
+
+    // setUndo((prev) => prev - 1);
+    // setUndoSteps(updatedUndoSteps);
+
+    // setRedo((prev) => prev + 1);
+    // setRedoStep((prevRedoSteps) => ({
+    //   ...prevRedoSteps,
+    //   [redo + 1]: [...undoSteps[index]],
+    // }));
+
     setLines(Object.fromEntries(newStoredLines));
-    drawLines();
+    drawLiness(Object.fromEntries(newStoredLines));
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -406,8 +383,6 @@ const TacticalBoard: React.FC = () => {
   };
 
   const drawLiness = (l: UndoSteps) => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
     if (ctx && canvas) {
       ctx?.clearRect(0, 0, canvas?.width, canvas?.height);
       drawPitch(ctx, canvas?.width, canvas?.height);
@@ -477,7 +452,7 @@ const TacticalBoard: React.FC = () => {
     if (!ctx) return;
 
     handleReset();
-  }, []);
+  }, [canvas, ctx]);
 
   const actionBtns = [
     { title: 'Undo', onClick: undoLastOperation, disabled: undo === 0 },

@@ -1,0 +1,40 @@
+.select-container {
+    display: flex;
+    /* flex-direction: column; */
+    /* gap: 5px; */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  select {
+    padding: 2px 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #ffffff;
+    color: #333;
+    font-size: 16px;
+    outline: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: border-color 0.3s, box-shadow 0.3s, background-color 0.3s;
+  }
+  
+  select:hover {
+    border-color: #888;
+  }
+  
+  select:focus {
+    border-color: #555;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    background-color: #f9f9f9;
+  }
+  
+  option {
+    padding: 10px 15px;
+    background-color: #ffffff;
+    color: #333;
+    font-size: 16px;
+  }
+  
+  option:hover {
+    background-color: #eaeaea;
+  }
+  

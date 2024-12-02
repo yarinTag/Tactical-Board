@@ -66,13 +66,13 @@ const Team: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex' }}>
+    <div style={{ display: 'flex', alignItems: 'center' }}>
+      <button onClick={handleButtonClick}>Open Color Picker</button>
       <FormationOptions
         formations={formationsKeys}
         selectedFormation={'4-2-4'}
         onFormationChange={handleFormationChange}
       />
-      <button onClick={handleButtonClick}>Open Color Picker</button>
       {isOpen && (
         <ColorPickerDialog
           onClose={handleCloseDialog}

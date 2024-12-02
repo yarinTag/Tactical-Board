@@ -1,4 +1,6 @@
 import React from 'react';
+
+import './styles.css';
 import { selectOptions, SelectOptions } from './interface';
 
 interface BoardOptionsProps {
@@ -31,7 +33,7 @@ const BoardOptions = (props: BoardOptionsProps) => {
   };
 
   return (
-    <div>
+    <div className='select-container'>
       <label>Select:</label>
       <select
         value={selectOption}
