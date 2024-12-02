@@ -19,10 +19,10 @@ const TacticalBoard: React.FC = () => {
   const canvas = canvasRef.current;
   const ctx = canvas?.getContext('2d');
   const [storedBallPoint, setStoredBallPoint] = useState<Array<IAxisPoint>>([]);
-  const [undoSteps, setUndoSteps] = useState<UndoSteps>({});
-  const [redoStep, setRedoStep] = useState<UndoSteps>({});
-  const [eraserSize, setEraserSize] = useState<number>(3);
   const [lines, setLines] = useState<UndoSteps>({});
+  const [redoStep, setRedoStep] = useState<UndoSteps>({});
+  const [undoSteps, setUndoSteps] = useState<UndoSteps>({});
+  const [eraserSize, setEraserSize] = useState<number>(3);
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
 
   const [selectOption, setSelectOption] = React.useState(
@@ -289,7 +289,6 @@ const TacticalBoard: React.FC = () => {
         const y = e.pageY - canvas.getBoundingClientRect().top;
         switch (selectOption) {
           case SelectOptions.BALLPASS:
-            // Check if the mouse is within the bounds of the ball
             if (
               (x >= ballPosition.x &&
                 x <= ballPosition.x + 25 &&
@@ -406,79 +405,66 @@ const TacticalBoard: React.FC = () => {
     }
   };
 
-  const getAllPointsExceptUndoKey = (undoKey: number): Point[] => {
-    const allPoints: Point[] = [];
-
-    for (const key in undoSteps) {
-      if (parseInt(key) !== undoKey) {
-        allPoints.push(...undoSteps[key]);
-      }
-    }
-
-    return allPoints;
-  };
-
-  const redoLastOperation = () => {
-    if (redo > 0 && ctx) {
-      const data = redoStep[redo];
-      ctx.beginPath();
-      data.forEach((item, index) => {
-        if (index !== 0) {
-          ctx.lineTo(item.offsetX, item.offsetY);
+  const drawLiness = (l: UndoSteps) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (ctx && canvas) {
+      ctx?.clearRect(0, 0, canvas?.width, canvas?.height);
+      drawPitch(ctx, canvas?.width, canvas?.height);
+      Object.values(l).forEach((line) => {
+        if (line && line.length > 0) {
+          ctx.beginPath();
+          ctx.moveTo(line[0].offsetX, line[0].offsetY);
+          line.forEach((point) => {
+            ctx.lineTo(point.offsetX, point.offsetY);
+          });
           ctx.stroke();
         }
       });
-      ctx.closePath();
-      const temp = {
-        ...redoStep,
-        [redo]: [],
-      };
-      setUndo(undo + 1);
-      setRedo(redo - 1);
-      setRedoStep(temp);
-      setUndoSteps({
-        ...undoSteps,
+    }
+  };
+
+  const redoLastOperation = () => {
+    if (redo > 0) {
+      const data = redoStep[redo];
+
+      const updatedRedoStep = { ...redoStep, [redo]: [] };
+      setRedo((prev) => prev - 1);
+      setRedoStep(updatedRedoStep);
+
+      setUndo((prev) => prev + 1);
+      setUndoSteps((prevUndoSteps) => ({
+        ...prevUndoSteps,
         [undo + 1]: [...data],
-      });
+      }));
+
+      setLines((prevLines) => ({
+        ...prevLines,
+        [redo]: data,
+      }));
+
+      drawLiness({ ...lines, [redo]: data });
     }
   };
 
   const undoLastOperation = () => {
-    if (undo > 0 && ctx) {
-      const data = getAllPointsExceptUndoKey(undo);
-      const redoData = undoSteps[undo];
+    if (undo > 0) {
+      const data = undoSteps[undo];
 
-      clearCanvas();
-      if (data.length === 0) {
-        setUndo(undo - 1);
-        setRedo(redo + 1);
-        const te = {
-          ...redoStep,
-          [redo + 1]: [...redoData],
-        };
-        setRedoStep(te);
-        return;
-      }
-      ctx.beginPath();
-      data.forEach((item, index) => {
-        if (index !== 0) {
-          ctx.lineTo(item.offsetX, item.offsetY);
-          ctx.stroke();
-        }
-      });
-      ctx.closePath();
-      const temp = {
-        ...undoSteps,
-        [undo]: [],
-      };
-      const te = {
-        ...redoStep,
-        [redo + 1]: [...redoData],
-      };
-      setUndo(undo - 1);
-      setRedo(redo + 1);
-      setRedoStep(te);
-      setUndoSteps(temp);
+      const updatedUndoSteps = { ...undoSteps, [undo]: [] };
+      setUndo((prev) => prev - 1);
+      setUndoSteps(updatedUndoSteps);
+
+      setRedo((prev) => prev + 1);
+      setRedoStep((prevRedoSteps) => ({
+        ...prevRedoSteps,
+        [redo + 1]: [...data],
+      }));
+
+      const updatedLines = { ...lines };
+      delete updatedLines[undo];
+      setLines(updatedLines);
+      drawLiness({ ...updatedLines });
     }
   };
 
