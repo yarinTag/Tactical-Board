@@ -1,11 +1,12 @@
 import React from 'react';
+import { useDispatch } from 'react-redux';
+
 import './App.css';
-import TacticalBoard from './component/tacticalBoard/TacticalBoard';
+import Team from './component/Team';
+import { setPlayers } from './redux/playerSlice';
 import { IPlayerData } from './component/player/interface';
 import { getFormationHorizontally } from './utils/FormationPos';
-import Team from './component/Team';
-import { useDispatch } from 'react-redux';
-import { setPlayers } from './redux/playerSlice';
+import TacticalBoard from './component/tacticalBoard/TacticalBoard';
 
 const initialPlayers: IPlayerData[] = [
   {
@@ -145,12 +146,7 @@ function App() {
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      style={{ width: '750px', height: '500px' }}
-      data-testid={`containerRef`}
-      id='containerRef'
-    >
+    <div ref={containerRef} data-testid={`containerRef`} id='containerRef'>
       <Team />
       <TacticalBoard />
     </div>

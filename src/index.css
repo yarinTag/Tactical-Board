@@ -12,6 +12,11 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
+
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 button:focus,

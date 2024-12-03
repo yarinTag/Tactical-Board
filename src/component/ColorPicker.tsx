@@ -30,8 +30,12 @@ const ColorPickerDialog: React.FC<{
   pantsC: string;
   shirtC: string;
 }> = ({ onClose, pantsC, shirtC }) => {
-  const [shirtColor, setShirtColor] = React.useState<string>(shirtC);
-  const [pantsColor, setPantsColor] = React.useState<string>(pantsC);
+  const [shirtColor, setShirtColor] = React.useState<string>(
+    getKeyByValue(colorsMap, shirtC)
+  );
+  const [pantsColor, setPantsColor] = React.useState<string>(
+    getKeyByValue(colorsMap, pantsC)
+  );
 
   const handleShirtColorChange = (
     event: React.ChangeEvent<HTMLSelectElement>
@@ -47,8 +51,8 @@ const ColorPickerDialog: React.FC<{
 
   const handleApplyColors = () => {
     onClose(
-      getKeyByValue(colorsMap, shirtColor),
-      getKeyByValue(colorsMap, pantsColor)
+      colorsMap.get(shirtColor) || shirtC,
+      colorsMap.get(pantsColor) || pantsC
     );
   };
 
@@ -58,24 +62,24 @@ const ColorPickerDialog: React.FC<{
         <div style={{ padding: '20px' }}>
           <h3>Choose Shirt Color:</h3>
           <select
-            value={colorsMap.get(shirtColor)}
+            value={shirtColor}
             onChange={handleShirtColorChange}
             className='select'
           >
-            {Array.from(colorsMap.entries()).map(([colorName, colorValue]) => (
-              <option key={colorName} value={colorValue}>
+            {Array.from(colorsMap.entries()).map(([colorName]) => (
+              <option key={colorName} value={colorName}>
                 {colorName}
               </option>
             ))}
           </select>
           <h3>Choose Pants Color:</h3>
           <select
-            value={colorsMap.get(pantsColor)}
+            value={pantsColor}
             onChange={handlePantsColorChange}
             className='select'
           >
-            {Array.from(colorsMap.entries()).map(([colorName, colorValue]) => (
-              <option key={colorName} value={colorValue}>
+            {Array.from(colorsMap.entries()).map(([colorName]) => (
+              <option key={colorName} value={colorName}>
                 {colorName}
               </option>
             ))}

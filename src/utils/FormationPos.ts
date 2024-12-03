@@ -1,3 +1,6 @@
+export const PADDING = 40;
+
+
 export function getFormation(formation: string) {
   switch (formation) {
     case '4-4-2':
@@ -277,8 +280,8 @@ export function getFormation(formation: string) {
 }
 
 export function getFormationHorizontally(formation: string) {
-  const pitchWidth = 700;
-  const pitchHeight = 500;
+  const pitchWidth =  window.innerWidth - PADDING;
+  const pitchHeight = window.innerHeight - PADDING;
 
   const originalFormation = getFormation(formation)!;
   return originalFormation.map((position) => ({
@@ -289,8 +292,8 @@ export function getFormationHorizontally(formation: string) {
 }
 
 export function getFormationVertically(formation: string) {
-  const pitchWidth = 350;
-  const pitchHeight = 500;
+  const pitchWidth =  window.innerWidth - PADDING;
+  const pitchHeight = window.innerHeight - PADDING;
 
   const originalFormation = getFormation(formation)!;
   return originalFormation.map((position) => ({

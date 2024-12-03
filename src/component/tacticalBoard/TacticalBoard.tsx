@@ -5,6 +5,7 @@ import BoardOptions from './BoardOptions';
 import { drawPitch } from '../../utils/CanvasUtils';
 import ActionButtons from '../actionbtn/ActionButtons';
 import { IAxisPoint, Point, SelectOptions, UndoSteps } from './interface';
+import { PADDING } from '../../utils/FormationPos';
 
 interface TacticsBoardProps {}
 
@@ -12,34 +13,37 @@ const TacticalBoard: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const imageRef = useRef(new Image());
+  const [undo, setUndo] = useState<number>(0);
+  const [redo, setRedo] = useState<number>(0);
   const [ballPosition, setBallPosition] = useState({ x: 0, y: 0 });
   const [isMouseDown, setIsMouseDown] = useState<boolean>(false);
   const [isBallDrag, setIsBallDrag] = useState<boolean>(false);
   const startX = React.useRef<number | null>(null);
   const startY = React.useRef<number | null>(null);
-  const canvas = canvasRef.current;
-  const ctx = canvas?.getContext('2d');
   const [storedBallPoint, setStoredBallPoint] = useState<Array<IAxisPoint>>([]);
   const [lines, setLines] = useState<UndoSteps>({});
   const [redoStep, setRedoStep] = useState<UndoSteps>({});
   const [undoSteps, setUndoSteps] = useState<UndoSteps>({});
   const [eraserSize, setEraserSize] = useState<number>(3);
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
-
   const [selectOption, setSelectOption] = React.useState(
     SelectOptions.DRAWLINE
   );
+  const [canvasSize, setCanvasSize] = useState({
+    width: window.innerWidth - PADDING,
+    height: window.innerHeight - PADDING * 2,
+  });
+  const canvas = canvasRef.current;
+  const ctx = canvas?.getContext('2d');
 
   const handleSelectedOption = (value: SelectOptions) => {
     setSelectOption(value);
     switch (value) {
       case SelectOptions.BALLPASS:
         if (!ctx || !canvas) return;
-        // Load the image
         imageRef.current.src =
           'https://cdn.pixabay.com/photo/2013/07/13/10/51/football-157930_1280.png';
         imageRef.current.onload = () => {
-          // Once the image is loaded, draw it on the canvas
           const margin = 10;
           const centerX = canvas.width / 2;
           const centerY = canvas.height / 2;
@@ -55,22 +59,19 @@ const TacticalBoard: React.FC = () => {
         };
         break;
       case SelectOptions.DRAWLINE:
-        clearCanvas();
+        drawLiness();
         break;
       default:
         break;
     }
   };
 
-  const [undo, setUndo] = useState<number>(0);
-  const [redo, setRedo] = useState<number>(0);
-
   const clearCanvas = () => {
-    if (ctx && canvas) {
-      ctx?.clearRect(0, 0, canvas?.width, canvas?.height);
-      drawPitch(ctx, canvas?.width, canvas?.height);
-      setStoredBallPoint([]);
-    }
+    if (!ctx || !canvas) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawPitch(ctx, canvas.width, canvas.height);
+    setStoredBallPoint([]);
   };
 
   const handleReset = () => {
@@ -107,7 +108,7 @@ const TacticalBoard: React.FC = () => {
       return;
 
     let currentIndex = 0;
-    const animationSpeed = 2;
+    const animationSpeed = 4;
 
     const drawFrame = () => {
       const targetX = storedBallPoint[currentIndex + 1].x;
@@ -133,12 +134,11 @@ const TacticalBoard: React.FC = () => {
           const y = storedBallPoint[currentIndex].y + (dy / steps) * stepCount;
 
           clearCanvas();
-          drawLinesForBall(); // Draw lines on each frame
+          drawLinesForBall();
 
           const imageWidth = 20;
           const imageHeight = 20;
 
-          // Calculate the center dynamically at each step
           const centerX = x - imageWidth / 2;
           const centerY = y - imageHeight / 2;
 
@@ -159,11 +159,6 @@ const TacticalBoard: React.FC = () => {
     drawLinesForBall();
     drawFrame();
     setStoredBallPoint([]);
-  };
-
-  const handleMouseEnter = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const target = e.target as HTMLElement;
-    const playerName = target.dataset.playerName;
   };
 
   const isLineIntersectingWithEraser = (
@@ -382,11 +377,11 @@ const TacticalBoard: React.FC = () => {
     }
   };
 
-  const drawLiness = (l: UndoSteps) => {
+  const drawLiness = (l?: UndoSteps) => {
     if (ctx && canvas) {
       ctx?.clearRect(0, 0, canvas?.width, canvas?.height);
       drawPitch(ctx, canvas?.width, canvas?.height);
-      Object.values(l).forEach((line) => {
+      Object.values(l ?? lines).forEach((line) => {
         if (line && line.length > 0) {
           ctx.beginPath();
           ctx.moveTo(line[0].offsetX, line[0].offsetY);
@@ -454,6 +449,20 @@ const TacticalBoard: React.FC = () => {
     handleReset();
   }, [canvas, ctx]);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setCanvasSize({
+        width: window.innerWidth - PADDING,
+        height: window.innerHeight - PADDING * 2,
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   const actionBtns = [
     { title: 'Undo', onClick: undoLastOperation, disabled: undo === 0 },
     { title: 'Redo', onClick: redoLastOperation, disabled: redo === 0 },
@@ -488,15 +497,14 @@ const TacticalBoard: React.FC = () => {
       )}
       <canvas
         ref={canvasRef}
-        width={750}
-        height={500}
+        width={canvasSize.width}
+        height={canvasSize.height}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onMouseEnter={handleMouseEnter}
         data-testid={`WrapperPlayers`}
         // onMouseOut={handleMouseUp}
         style={{
