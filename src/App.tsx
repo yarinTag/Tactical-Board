@@ -1,5 +1,6 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
+import * as htmlToImage from 'html-to-image';
 
 import './App.css';
 import Team from './component/Team';
@@ -7,6 +8,7 @@ import { setPlayers } from './redux/playerSlice';
 import { IPlayerData } from './component/player/interface';
 import { getFormationHorizontally } from './utils/FormationPos';
 import TacticalBoard from './component/tacticalBoard/TacticalBoard';
+import { ActionButton } from './component/actionbtn/ActionButtons';
 
 const initialPlayers: IPlayerData[] = [
   {
@@ -141,14 +143,34 @@ function App() {
     );
   };
 
+  const convertToImage = () => {
+    if (containerRef.current) {
+      htmlToImage
+        .toPng(containerRef.current)
+        .then((dataUrl: string) => {
+          const link = document.createElement('a');
+          link.href = dataUrl;
+          link.download = 'image.png';
+          link.click();
+        })
+        .catch((error: Error) => {
+          console.error('Failed to convert div to image:', error);
+        });
+    }
+  };
+
   React.useEffect(() => {
     generateAvilablePlayers(initialPlayers);
   }, []);
 
+  const actionBtns: ActionButton[] = [
+    { title: 'Download', onClick: convertToImage },
+  ];
+
   return (
     <div ref={containerRef} data-testid={`containerRef`} id='containerRef'>
       <Team />
-      <TacticalBoard />
+      <TacticalBoard btns={actionBtns} />
     </div>
   );
 }

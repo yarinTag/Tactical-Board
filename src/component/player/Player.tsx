@@ -57,10 +57,8 @@ const Player: React.FC<PlayerProps> = ({ player, onUpdatePlayer }) => {
       Math.min(parentRect.bottom - playerHeight, newY)
     );
 
-    // Update the position in the ref
     playerPosition.current = { x: newX, y: newY };
 
-    // Apply the new position visually (without causing re-render)
     if (playerRef.current) {
       playerRef.current.style.left = `${newX}px`;
       playerRef.current.style.top = `${newY}px`;

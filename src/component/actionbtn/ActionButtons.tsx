@@ -1,18 +1,18 @@
 import React from 'react';
 
-interface ActionButton {
+export interface ActionButton {
   title: string;
   onClick: () => void;
   disabled?: boolean;
 }
 
-interface ActionButtonsProps {
+export interface ActionButtonsProps {
   buttons: ActionButton[];
 }
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({ buttons }) => {
   return (
-    <div style={{ display: 'flex', gap: '10px' }}>
+    <div style={{ display: 'contents' }}>
       {buttons.map((button, index) => (
         <button
           key={index}

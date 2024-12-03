@@ -1,17 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
-import * as htmlToImage from 'html-to-image';
+import { useSelector } from 'react-redux';
 
-import BoardOptions from './BoardOptions';
-import { drawPitch } from '../../utils/CanvasUtils';
-import ActionButtons from '../actionbtn/ActionButtons';
-import { IAxisPoint, Point, SelectOptions, UndoSteps } from './interface';
+import {
+  drawPitch,
+  FILL_STYLE,
+  isLineIntersectingWithEraser,
+  LINE_WIDTH,
+  STROKE_STYLE,
+} from '../../utils/CanvasUtils';
+import BoardActions from './BoardActions';
+import { RootState } from '../../redux/store';
 import { PADDING } from '../../utils/FormationPos';
+import { ActionButton } from '../actionbtn/ActionButtons';
+import { IAxisPoint, Point, SelectOptions, UndoSteps } from './interface';
 
-interface TacticsBoardProps {}
+interface TacticsBoardProps {
+  btns: ActionButton[];
+}
 
-const TacticalBoard: React.FC = () => {
+const TacticalBoard: React.FC<TacticsBoardProps> = ({ btns }) => {
+  const teamOptions = useSelector((state: RootState) => state.team);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
   const imageRef = useRef(new Image());
   const [undo, setUndo] = useState<number>(0);
   const [redo, setRedo] = useState<number>(0);
@@ -26,18 +35,15 @@ const TacticalBoard: React.FC = () => {
   const [undoSteps, setUndoSteps] = useState<UndoSteps>({});
   const [eraserSize, setEraserSize] = useState<number>(3);
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
-  const [selectOption, setSelectOption] = React.useState(
-    SelectOptions.DRAWLINE
-  );
+
   const [canvasSize, setCanvasSize] = useState({
     width: window.innerWidth - PADDING,
-    height: window.innerHeight - PADDING * 2,
+    height: window.innerHeight - PADDING,
   });
   const canvas = canvasRef.current;
   const ctx = canvas?.getContext('2d');
 
   const handleSelectedOption = (value: SelectOptions) => {
-    setSelectOption(value);
     switch (value) {
       case SelectOptions.BALLPASS:
         if (!ctx || !canvas) return;
@@ -66,6 +72,10 @@ const TacticalBoard: React.FC = () => {
     }
   };
 
+  const handleEraserSize = (size: number) => {
+    setEraserSize(size);
+  };
+
   const clearCanvas = () => {
     if (!ctx || !canvas) return;
 
@@ -88,19 +98,7 @@ const TacticalBoard: React.FC = () => {
   };
 
   const drawLinesForBall = () => {
-    if (!canvasRef.current || !ctx) return;
-    clearCanvas();
-
-    ctx.beginPath();
-    ctx.moveTo(storedBallPoint[0].x, storedBallPoint[0].y);
-
-    storedBallPoint.forEach((point) => {
-      ctx.lineTo(point.x, point.y);
-    });
-
-    ctx.strokeStyle = 'blue';
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    pathTo(storedBallPoint[0], storedBallPoint, 'blue', undefined, 1);
   };
 
   const animateLine = () => {
@@ -161,27 +159,6 @@ const TacticalBoard: React.FC = () => {
     setStoredBallPoint([]);
   };
 
-  const isLineIntersectingWithEraser = (
-    line: Point[],
-    x: number,
-    y: number,
-    size: number
-  ): boolean => {
-    return line.some(
-      (point) => distanceToPoint(point, { offsetX: x, offsetY: y }) < size
-    );
-  };
-
-  function distanceToPoint(
-    point1: Point,
-    point2: { offsetX: number; offsetY: number }
-  ): number {
-    return Math.sqrt(
-      Math.pow(point1.offsetX - point2.offsetX, 2) +
-        Math.pow(point1.offsetY - point2.offsetY, 2)
-    );
-  }
-
   const eraseAtPosition = (x: number, y: number, size: number) => {
     if (!ctx) return;
     let index: number = -1;
@@ -212,7 +189,7 @@ const TacticalBoard: React.FC = () => {
     const x = e.nativeEvent.offsetX;
     const y = e.nativeEvent.offsetY;
     if (canvas && ctx) {
-      switch (selectOption) {
+      switch (teamOptions.boardOption) {
         case SelectOptions.BALLPASS:
           const canvasMouseX = x;
           const canvasMouseY = y;
@@ -259,7 +236,7 @@ const TacticalBoard: React.FC = () => {
       if (canvas && ctx && startX.current !== null && startY.current !== null) {
         const x = e.pageX - canvas.getBoundingClientRect().left;
         const y = e.pageY - canvas.getBoundingClientRect().top;
-        switch (selectOption) {
+        switch (teamOptions.boardOption) {
           case SelectOptions.BALLPASS:
             if (
               (x >= ballPosition.x &&
@@ -276,13 +253,9 @@ const TacticalBoard: React.FC = () => {
             }
             break;
           case SelectOptions.DRAWLINE:
-            ctx.beginPath();
-            ctx.moveTo(startX.current, startY.current);
-            ctx.lineTo(x, y);
-            ctx.stroke();
+            pathTo({ x: startX.current, y: startY.current }, { x, y });
             startX.current = x;
             startY.current = y;
-            ctx.closePath();
             const temp = {
               ...undoSteps,
             };
@@ -327,13 +300,9 @@ const TacticalBoard: React.FC = () => {
         const touch = e.touches[0];
         const x = touch.pageX - canvas.offsetLeft;
         const y = touch.pageY - canvas.offsetTop;
-        ctx.beginPath();
-        ctx.moveTo(startX.current, startY.current);
-        ctx.lineTo(x, y);
-        ctx.stroke();
+        pathTo({ x: startX.current, y: startY.current }, { x, y });
         startX.current = x;
         startY.current = y;
-        ctx.closePath();
       }
     }
   };
@@ -342,38 +311,34 @@ const TacticalBoard: React.FC = () => {
     setIsMouseDown(false);
   };
 
-  const handleStoredLine = () => {
-    if (canvas && ctx && storedBallPoint.length > 0) {
-      drawPitch(ctx, canvas?.width, canvas?.height);
-      ctx.strokeStyle = 'red';
-      ctx.fillStyle = 'blue';
-      ctx.lineWidth = 2;
-      // ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const pathTo = (
+    moveTo: IAxisPoint,
+    lineTo: IAxisPoint | IAxisPoint[],
+    strokeStyle = STROKE_STYLE,
+    fillStyle = FILL_STYLE,
+    lineWidth = LINE_WIDTH
+  ) => {
+    if (canvas && ctx) {
+      ctx.strokeStyle = strokeStyle;
+      ctx.fillStyle = fillStyle;
+      ctx.lineWidth = lineWidth;
       ctx.beginPath();
-      ctx.moveTo(storedBallPoint[0].x, storedBallPoint[0].y);
-      for (let i = 0; i < storedBallPoint.length; i++) {
-        ctx.lineTo(storedBallPoint[i].x, storedBallPoint[i].y);
-      }
-      ctx.closePath();
-      ctx.fill();
+      ctx.moveTo(moveTo.x, moveTo.y);
+      if (Array.isArray(lineTo))
+        for (let i = 0; i < lineTo.length; i++)
+          ctx.lineTo(lineTo[i].x, lineTo[i].y);
+      else ctx.lineTo(lineTo.x, lineTo.y);
+
+      // ctx.closePath();
+      // ctx.fill();
       ctx.stroke();
-      setStoredBallPoint([]);
     }
   };
 
-  const convertToImage = () => {
-    if (containerRef.current) {
-      htmlToImage
-        .toPng(containerRef.current)
-        .then((dataUrl: string) => {
-          const link = document.createElement('a');
-          link.href = dataUrl;
-          link.download = 'image.png';
-          link.click();
-        })
-        .catch((error: Error) => {
-          console.error('Failed to convert div to image:', error);
-        });
+  const handleStoredLine = () => {
+    if (canvas && ctx && storedBallPoint.length > 0) {
+      pathTo(storedBallPoint[0], storedBallPoint, 'red', 'blue', 2);
+      setStoredBallPoint([]);
     }
   };
 
@@ -466,35 +431,31 @@ const TacticalBoard: React.FC = () => {
   const actionBtns = [
     { title: 'Undo', onClick: undoLastOperation, disabled: undo === 0 },
     { title: 'Redo', onClick: redoLastOperation, disabled: redo === 0 },
-    { title: 'Save', onClick: convertToImage },
-    { title: 'Animation ball', onClick: animateLine },
+    {
+      title: 'Animation ball',
+      onClick: animateLine,
+      disabled: !(teamOptions.boardOption === SelectOptions.BALLPASS),
+    },
+    {
+      title: 'Draw path',
+      onClick: handleStoredLine,
+      disabled: !(teamOptions.boardOption === SelectOptions.BALLPASS),
+    },
     { title: 'Clear', onClick: clearCanvas },
     { title: 'Reset', onClick: handleReset },
-    { title: 'Draw path', onClick: handleStoredLine },
+    ...btns,
   ];
 
   return (
     <div>
-      <div style={{ display: 'flex' }}>
-        <ActionButtons buttons={actionBtns} />
-        <BoardOptions
-          selectOption={SelectOptions.DRAWLINE}
-          handleSelectedOption={handleSelectedOption}
-        />
-      </div>
-      {selectOption === SelectOptions.ERASER && (
-        <div>
-          <label>Eraser Size:</label>
-          <input
-            type='range'
-            min='2'
-            max='15'
-            value={eraserSize}
-            onChange={(e) => setEraserSize(Number(e.target.value))}
-          />
-          <span>{eraserSize}px</span>
-        </div>
-      )}
+      <BoardActions
+        btns={actionBtns}
+        eraserSize={eraserSize}
+        teamOptions={teamOptions}
+        handleEraserSize={handleEraserSize}
+        handleSelectedOption={handleSelectedOption}
+      />
+
       <canvas
         ref={canvasRef}
         width={canvasSize.width}
@@ -509,18 +470,21 @@ const TacticalBoard: React.FC = () => {
         // onMouseOut={handleMouseUp}
         style={{
           border: '1px solid black',
-          cursor: selectOption === SelectOptions.ERASER ? 'none' : 'default',
+          cursor:
+            teamOptions.boardOption === SelectOptions.ERASER
+              ? 'none'
+              : 'default',
         }}
       />
       {/* Custom Cursor */}
-      {selectOption === SelectOptions.ERASER && (
+      {teamOptions.boardOption === SelectOptions.ERASER && (
         <div
           style={{
             position: 'absolute',
             top: `${cursorPosition.y}px`,
             left: `${cursorPosition.x}px`,
-            width: '16px',
-            height: '16px',
+            width: `${10 * eraserSize}px`,
+            height: `${10 * eraserSize}px`,
             background: `url('https://cdn-icons-png.flaticon.com/128/2015/2015051.png')`,
             backgroundSize: 'cover',
             pointerEvents: 'none',

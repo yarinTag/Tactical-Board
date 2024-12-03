@@ -1,3 +1,5 @@
+import { Point } from '../component/tacticalBoard/interface';
+
 const drawPitch = (
   ctx: CanvasRenderingContext2D,
   canvasWidth: number,
@@ -133,5 +135,36 @@ const drawPitch = (
 };
 
 const MAX_HISTORY_SIZE = 5;
+const STROKE_STYLE = '#FFF';
+const FILL_STYLE = '#060';
+const LINE_WIDTH = 1;
 
-export { drawPitch, MAX_HISTORY_SIZE };
+const isLineIntersectingWithEraser = (
+  line: Point[],
+  x: number,
+  y: number,
+  size: number
+): boolean => {
+  return line.some(
+    (point) => distanceToPoint(point, { offsetX: x, offsetY: y }) < size
+  );
+};
+
+const distanceToPoint = (
+  point1: Point,
+  point2: { offsetX: number; offsetY: number }
+): number => {
+  return Math.sqrt(
+    Math.pow(point1.offsetX - point2.offsetX, 2) +
+      Math.pow(point1.offsetY - point2.offsetY, 2)
+  );
+};
+
+export {
+  drawPitch,
+  isLineIntersectingWithEraser,
+  MAX_HISTORY_SIZE,
+  STROKE_STYLE,
+  FILL_STYLE,
+  LINE_WIDTH,
+};
